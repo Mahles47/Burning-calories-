@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12161f">
+<title>عدّاد العجز</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="عدّاد العجز">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{--bg:#12161f;--card:#1b2130;--line:#2a3247;--tx:#e9edf5;--mu:#8e9ab3;--ac:#7fd1c7;--ok:#2e9e6b;--wn:#d9a21b;--er:#d4493f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Segoe UI",Tahoma,Arial,sans-serif;padding:12px 12px 40px;max-width:560px;margin-inline:auto;line-height:1.5}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+h1{font-size:18px;margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.big{font-size:44px;font-weight:800;color:var(--ac);line-height:1.1}
+.row{display:flex;gap:10px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+.mu{color:var(--mu);font-size:13px}
+.kg{text-align:left}.kg b{font-size:22px}
+#banner{border-radius:14px;padding:12px 14px;margin-bottom:12px;font-weight:600;font-size:15px;border:1px solid transparent}
+.g{background:#12301f;border-color:var(--ok)}.y{background:#3a2e0b;border-color:var(--wn)}.r{background:#3d1613;border-color:var(--er)}
+.lr{display:flex;justify-content:space-between;align-items:center;margin:2px 0 6px}.lr label{margin:0}
+.bd{display:none;background:#f0b429;color:#1a1300;font-weight:800;font-size:15px;padding:2px 12px;border-radius:8px;min-width:54px;text-align:center}
+label{display:block;font-size:15px;margin:2px 0 6px;font-weight:600}
+textarea,input,select{width:100%;background:#121725;color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:11px;font:inherit;font-size:16px}
+textarea{min-height:70px;resize:vertical}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--ac);border-color:transparent}
+.f{margin-bottom:12px}
+button{font:inherit;font-size:16px;font-weight:700;border:0;border-radius:12px;padding:14px;width:100%;cursor:pointer;color:#0c1a18;background:var(--ac);min-height:48px}
+button.s{background:#262e43;color:var(--tx);font-weight:600}
+button.d{background:var(--er);color:#fff}
+button:disabled{opacity:.5}
+.btns{display:grid;gap:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}
+th{color:var(--mu);font-weight:600}
+.tot td{font-weight:700;color:var(--ac)}
+.sc{overflow-x:auto}
+details summary{cursor:pointer;font-weight:700;font-size:16px;min-height:32px}
+.clk{cursor:pointer}.clk:active{background:#232b40}
+.sm{background:#121725;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:6px 0;font-size:14px;white-space:pre-wrap;word-break:break-word}
+#modal,#dmodal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:16px;z-index:9}
+#modal.on,#dmodal.on{display:flex}
+#modal .card,#dmodal .card{width:100%;max-width:520px;margin:auto}
+.ic{background:none;color:var(--tx);width:44px;padding:8px;font-size:22px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;display:none;z-index:10}
+</style>
+</head>
+<body>
+<div class="top"><div style="display:flex;align-items:center;gap:10px"><img src="icon.svg" width="40" height="40" alt="" style="border-radius:10px"><h1>عدّاد العجز</h1></div><button class="ic" onclick="openSet()" aria-label="الإعدادات">⚙️</button></div>
+
+<div class="card">
+  <div class="mu">الرصيد التراكمي للعجز (سعرة)</div>
+  <div class="row">
+    <div class="big" id="cum">0</div>
+    <div class="kg"><b id="kg">0</b> كجم<div class="mu">الوزن المتوقع: <b id="wt" style="color:var(--tx)">0</b> كجم</div></div>
+  </div>
+</div>
+
+<button id="inst" class="s" style="display:none;margin-bottom:12px" onclick="doInst()">📲 تثبيت التطبيق على الهاتف</button>
+<div id="banner" class="g">ابدأ بكتابة وجباتك ثم اضغط حساب</div>
+
+<div class="card">
+  <div class="f"><div class="lr"><label for="b">☀️ الفطار</label><span class="bd" id="bd_b"></span></div><textarea id="b" data-k="b" placeholder="مثال: ٢ بيضة + نسكافيه"></textarea></div>
+  <div class="f"><div class="lr"><label for="l">🍲 الغداء</label><span class="bd" id="bd_l"></span></div><textarea id="l" data-k="l"></textarea></div>
+  <div class="f"><div class="lr"><label for="d">🌙 العشاء</label><span class="bd" id="bd_d"></span></div><textarea id="d" data-k="d"></textarea></div>
+  <div class="f"><div class="lr"><label for="s">🍫 السناكات والمشروبات</label><span class="bd" id="bd_s"></span></div><textarea id="s" data-k="s"></textarea></div>
+  <div class="f" style="margin:0"><label for="a">🏃‍♂️ حرق النشاط (الساعة / الموبايل)</label><input id="a" data-k="a" type="number" inputmode="decimal" min="0" placeholder="0"></div>
+</div>
+
+<div class="btns">
+  <button id="calc" onclick="calc()">🤖 احسب السعرات بالذكاء الاصطناعي</button>
+  <div id="res"></div>
+  <button class="d" onclick="lockDay()">🔒 اعتماد وتقفيل اليوم</button>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <details><summary>📅 سجل الأيام السابقة</summary>
+    <div class="f" style="margin:10px 0 0"><label for="jd">الذهاب إلى يوم محدد</label><input id="jd" type="date" onchange="jumpDay(this.value)"></div>
+    <div class="mu" style="margin-top:8px">اضغط على أي يوم لعرض تفاصيله الكاملة.</div>
+    <div class="sc" style="margin-top:10px"><table><thead><tr><th>التاريخ</th><th>الداخل</th><th>الحرق</th><th>الصافي</th><th>التراكمي</th></tr></thead><tbody id="hist"></tbody></table></div>
+    <div id="hempty" class="mu" style="padding:8px 0">لا توجد أيام معتمدة بعد.</div>
+  </details>
+</div>
+
+<div id="modal"><div class="card">
+  <h1 style="margin-bottom:12px">⚙️ الإعدادات</h1>
+  <div class="f"><label for="prov">مزود الذكاء الاصطناعي</label>
+    <select id="prov"><option value="gemini">Gemini (gemini-2.5-flash)</option><option value="openai">OpenAI (gpt-4o-mini)</option></select></div>
+  <div class="f"><label for="kg1">Gemini API Key</label><input id="kg1" type="password" autocomplete="off" dir="ltr"></div>
+  <div class="f"><label for="ko">OpenAI API Key</label><input id="ko" type="password" autocomplete="off" dir="ltr"></div>
+  <div class="btns" style="margin-bottom:16px"><button onclick="saveSet()">حفظ الإعدادات</button></div>
+  <hr style="border-color:var(--line)">
+  <div id="pst" class="mu" style="margin:12px 0"></div>
+  <div class="btns" style="margin-bottom:8px"><button class="s" onclick="pwaCheck()">🔍 فحص جاهزية التثبيت (PWA)</button></div>
+  <div id="pwa" class="sm" style="display:none;line-height:1.9"></div>
+  <div class="btns" style="margin:14px 0">
+    <button class="s" onclick="exp()">⬇️ تصدير نسخة احتياطية (Export JSON)</button>
+    <button class="s" onclick="document.getElementById('imp').click()">⬆️ استرجاع نسخة (Import JSON)</button>
+    <input id="imp" type="file" accept=".json,application/json" hidden onchange="imp(this)">
+  </div>
+  <hr style="border-color:var(--line)">
+  <div class="f" style="margin-top:14px"><label for="mc">تعديل الرصيد التراكمي يدوياً</label>
+    <input id="mc" type="number" inputmode="decimal" placeholder="الرقم الجديد">
+    <input id="mw" placeholder="اكتب: تأكيد" style="margin-top:8px"></div>
+  <div class="btns"><button class="d" onclick="manual()">تعديل الرصيد</button><button class="s" onclick="closeSet()">إغلاق</button></div>
+</div></div>
+<div id="dmodal"><div class="card"><h1 id="dt" style="margin-bottom:10px"></h1><div id="dbody"></div><div class="btns" style="margin-top:12px"><button class="s" onclick="$('dmodal').classList.remove('on')">إغلاق</button></div></div></div>
+<div id="toast"></div>
+
+<script>
+const BMR=1861,KEY='deficit_tracker_v1',KCAL=7700;
+const NAMES={b:'الفطار',l:'الغداء',d:'العشاء',s:'السناكات والمشروبات'};
+const $=id=>document.getElementById(id);
+const def=()=>({cum:53000,w0:93,prov:'gemini',kg:'',ko:'',log:[],dr:{b:'',l:'',d:'',s:'',a:'',ai:null}});
+const idb={db:null,
+  open(){return new Promise((res,rej)=>{const r=indexedDB.open('deficit_db',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+  async get(){try{const db=this.db||(this.db=await this.open());return await new Promise((res,rej)=>{const q=db.transaction('kv').objectStore('kv').get('state');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}catch(e){return null}},
+  async put(v){try{const db=this.db||(this.db=await this.open());db.transaction('kv','readwrite').objectStore('kv').put(JSON.parse(JSON.stringify(v)),'state')}catch(e){}}};
+let S=load();
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&typeof x.cum==='number')return Object.assign(def(),x,{dr:Object.assign(def().dr,x.dr||{})})}catch(e){}return def()}
+function save(){S.updated=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('تعذر الحفظ في الذاكرة الأساسية')}idb.put(S)}
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',2600)}
+const n0=v=>Math.round(v).toLocaleString('en-US');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const SYS=`أنت حاسب سعرات حرارية دقيق للأكل المصري والبيتي. المستخدم يكتب وجباته باللهجة المصرية.
+أعد الرد بصيغة JSON فقط، بدون أي مقدمات أو شرح أو علامات Markdown.
+القاموس الشخصي الثابت (التزم به حرفياً ولا تجتهد فيه):
+- كوباية نسكافيه معتادة بدون سكر = 79 سعرة
+- معلقة سكر واحدة = 48 سعرة (نصف معلقة = 24)
+- مكعب شوكولاتة ستيفيا = 45 سعرة
+- بيضة واحدة = 72 سعرة
+- صابع كفتة بيتي متوسط = 42 سعرة
+- مكس الجبن = 28 سعرة لكل 10 جرام
+- تمر محشي كاجو = 47 سعرة للحبة
+- محشي كرنب خفيف بدون دهون = 16.5 سعرة للصابع
+- قطعة لحمة مسلوقة متوسطة بدون دهون = 120 سعرة
+أي طعام غير موجود في القائمة احسبه بدقة واقعية للأكل المصري والبيتي.
+صيغة الرد المطلوبة:
+{"meals":{"b":{"items":[{"name":"","qty":"","kcal":0}],"total":0},"l":{...},"d":{...},"s":{...}},"day_total":0}
+المفاتيح: b الفطار، l الغداء، d العشاء، s السناكات والمشروبات. الوجبة الفارغة تُرجع items فارغة و total=0. kcal أرقام فقط.`;
+
+function intake(){const ai=S.dr.ai;return ai?ai.day_total:0}
+function burn(){return BMR+(parseFloat(S.dr.a)||0)}
+
+function render(){
+  $('cum').textContent=n0(S.cum);
+  $('kg').textContent=(S.cum/KCAL).toFixed(2);
+  $('wt').textContent=(S.w0-S.cum/KCAL).toFixed(1);
+  ['b','l','d','s','a'].forEach(k=>{if(document.activeElement!==$(k))$(k).value=S.dr[k]});
+  banner();table();hist();
+}
+function banner(){
+  const el=$('banner'),ai=S.dr.ai;
+  if(!ai){el.className='g';el.textContent='اكتب وجباتك ثم اضغط «احسب السعرات» لتفعيل الإنذار المبكر.';return}
+  const i=intake(),b=burn(),rem=b-i;
+  if(rem<0){el.className='r';el.textContent='🔴 خطر: تجاوزت الحرق اليومي ('+n0(i)+' من '+n0(b)+'). فائض '+n0(-rem)+' سعرة سيُخصم من العداد عند التقفيل.'}
+  else if(rem<200){el.className='y';el.textContent='🟡 تحذير: المتبقي '+n0(rem)+' سعرة فقط قبل نقطة التعادل ('+n0(i)+' من '+n0(b)+').'}
+  else{el.className='g';el.textContent='🟢 الوضع آمن: المتبقي '+n0(rem)+' سعرة. عجز متوقع اليوم '+n0(rem)+' ('+n0(i)+' من '+n0(b)+').'}
+}
+function table(){
+  const ai=S.dr.ai,box=$('res');
+  for(const k of ['b','l','d','s']){const e=$('bd_'+k),m=ai&&ai.meals[k];if(m&&(m.items.length||m.total)){e.textContent=n0(m.total);e.style.display='block'}else e.style.display='none'}
+  if(!ai){box.innerHTML='';return}
+  let h='<div class="card sc" style="margin:0"><table><thead><tr><th>العنصر</th><th>الكمية</th><th>سعرة</th></tr></thead><tbody>';
+  for(const k of ['b','l','d','s']){
+    const m=ai.meals[k];if(!m||(!m.items.length&&!m.total))continue;
+    h+='<tr><th colspan="3" style="color:var(--ac)">'+NAMES[k]+'</th></tr>';
+    m.items.forEach(it=>{h+='<tr><td>'+esc(it.name)+'</td><td>'+esc(it.qty)+'</td><td>'+n0(it.kcal)+'</td></tr>'});
+    h+='<tr class="tot"><td colspan="2">إجمالي '+NAMES[k]+'</td><td>'+n0(m.total)+'</td></tr>';
+  }
+  h+='<tr class="tot"><td colspan="2">الإجمالي الكلي لليوم</td><td>'+n0(ai.day_total)+'</td></tr></tbody></table>';
+  h+='<div class="mu" style="margin-top:8px">إجمالي الحرق: '+n0(burn())+' (BMR '+BMR+' + نشاط '+n0(parseFloat(S.dr.a)||0)+')</div></div>';
+  box.innerHTML=h;
+}
+function hist(){
+  $('hist').innerHTML=S.log.map((r,i)=>[r,i]).reverse().map(([r,i])=>'<tr class="clk" onclick="showDay('+i+')"><td>'+esc(r.date)+'</td><td>'+n0(r.intake)+'</td><td>'+n0(r.burn)+'</td><td style="color:'+(r.net>=0?'var(--ok)':'var(--er)')+'">'+(r.net>=0?'+':'')+n0(r.net)+'</td><td>'+n0(r.cum)+'</td></tr>').join('');
+  $('hempty').style.display=S.log.length?'none':'block';
+}
+
+document.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('input',()=>{
+  S.dr[el.dataset.k]=el.value;
+  if(el.dataset.k!=='a')S.dr.ai=null; // النص تغيّر: الحساب القديم لم يعد صالحاً
+  save();banner();table();
+}));
+
+function normalize(j){
+  const out={meals:{},day_total:0};
+  for(const k of ['b','l','d','s']){
+    const m=(j.meals&&j.meals[k])||{items:[],total:0};
+    const items=(m.items||[]).map(it=>({name:it.name||'',qty:it.qty==null?'':it.qty,kcal:Number(it.kcal)||0}));
+    const total=items.length?items.reduce((a,x)=>a+x.kcal,0):(Number(m.total)||0);
+    out.meals[k]={items,total};out.day_total+=total;
+  }
+  return out;
+}
+async function calc(){
+  const txt=['b','l','d','s'].map(k=>S.dr[k].trim()?NAMES[k]+': '+S.dr[k].trim():'').filter(Boolean).join('\n');
+  if(!txt)return toast('اكتب وجبة واحدة على الأقل');
+  const key=S.prov==='gemini'?S.kg:S.ko;
+  if(!key){toast('أضف الـ API Key من الإعدادات');return openSet()}
+  const btn=$('calc');btn.disabled=true;btn.textContent='⏳ جارٍ الحساب...';
+  try{
+    let raw;
+    if(S.prov==='gemini'){
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({systemInstruction:{parts:[{text:SYS}]},contents:[{role:'user',parts:[{text:txt}]}],generationConfig:{responseMimeType:'application/json',temperature:0.1}})});
+      const d=await r.json();if(!r.ok)throw new Error(d.error&&d.error.message||r.status);
+      raw=d.candidates[0].content.parts.map(p=>p.text||'').join('');
+    }else{
+      const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o-mini',temperature:0.1,response_format:{type:'json_object'},messages:[{role:'system',content:SYS},{role:'user',content:txt}]})});
+      const d=await r.json();if(!r.ok)throw new Error(d.error&&d.error.message||r.status);
+      raw=d.choices[0].message.content;
+    }
+    S.dr.ai=normalize(JSON.parse(raw.replace(/```json|```/g,'').trim()));
+    save();render();toast('تم الحساب ✅');
+  }catch(e){toast('فشل الحساب: '+(e.message||e).toString().slice(0,80))}
+  btn.disabled=false;btn.textContent='🤖 احسب السعرات بالذكاء الاصطناعي';
+}
+function lockDay(){
+  if(!S.dr.ai)return toast('احسب السعرات أولاً قبل التقفيل');
+  const i=intake(),b=burn(),net=b-i;
+  if(!confirm('تقفيل اليوم؟\nالداخل: '+n0(i)+'\nالحرق: '+n0(b)+'\nالصافي: '+(net>=0?'عجز ':'فائض ')+n0(Math.abs(net))))return;
+  if(!confirm('تأكيد نهائي: سيتم '+(net>=0?'إضافة ':'خصم ')+n0(Math.abs(net))+' سعرة '+(net>=0?'إلى':'من')+' العداد ومسح خانات اليوم. متابعة؟'))return;
+  S.cum+=net;
+  S.log.push({date:new Date().toLocaleDateString('en-CA'),intake:i,burn:b,net:net,cum:S.cum,meals:{b:S.dr.b,l:S.dr.l,d:S.dr.d,s:S.dr.s},detail:S.dr.ai});
+  S.dr={b:'',l:'',d:'',s:'',a:'',ai:null};
+  save();render();toast('تم اعتماد اليوم 🔒');
+  setTimeout(()=>{if(confirm('تم الاعتماد. تنزيل نسخة احتياطية الآن؟ (يُنصح بذلك)'))exp()},400);
+}
+
+function showDay(i){
+  const r=S.log[i];if(!r)return;
+  $('dt').textContent='📅 '+r.date;
+  let h='<div class="sm">الداخل: '+n0(r.intake)+'\nالحرق: '+n0(r.burn)+'\nالصافي: '+(r.net>=0?'عجز ':'فائض ')+n0(Math.abs(r.net))+'\nالرصيد التراكمي وقتها: '+n0(r.cum)+'</div>';
+  const m=r.meals||{};
+  for(const k of ['b','l','d','s']){
+    const t=(m[k]||'').trim(),dm=r.detail&&r.detail.meals&&r.detail.meals[k];
+    if(!t&&!(dm&&dm.items.length))continue;
+    h+='<div style="margin-top:12px;color:var(--ac);font-weight:700">'+NAMES[k]+(dm?' — '+n0(dm.total)+' سعرة':'')+'</div>';
+    if(t)h+='<div class="sm">'+esc(t)+'</div>';
+    if(dm&&dm.items.length)h+='<div class="sc"><table><tbody>'+dm.items.map(it=>'<tr><td>'+esc(it.name)+'</td><td>'+esc(it.qty)+'</td><td>'+n0(it.kcal)+'</td></tr>').join('')+'</tbody></table></div>';
+  }
+  $('dbody').innerHTML=h;$('dmodal').classList.add('on');
+}
+function jumpDay(v){
+  if(!v)return;let idx=-1;
+  S.log.forEach((r,i)=>{if(r.date===v)idx=i});
+  if(idx<0)return toast('لا يوجد يوم معتمد بهذا التاريخ');
+  showDay(idx);
+}
+function openSet(){
+  try{navigator.storage.persisted().then(p=>{$('pst').textContent=(p?'🛡️ التخزين الدائم مفعّل: المتصفح لن يمسح بياناتك تلقائياً.':'⚠️ التخزين الدائم غير مفعّل بعد. أضف التطبيق للشاشة الرئيسية وصدّر نسخة احتياطية دورياً.')+' (نسخة مزدوجة: localStorage + IndexedDB)'})}catch(e){$('pst').textContent=''}$('prov').value=S.prov;$('kg1').value=S.kg;$('ko').value=S.ko;$('mc').value='';$('mw').value='';$('modal').classList.add('on')}
+function closeSet(){$('modal').classList.remove('on')}
+function saveSet(){S.prov=$('prov').value;S.kg=$('kg1').value.trim();S.ko=$('ko').value.trim();save();closeSet();toast('تم حفظ الإعدادات')}
+function manual(){
+  const v=parseFloat($('mc').value);
+  if(isNaN(v))return toast('اكتب رقماً صحيحاً');
+  if($('mw').value.trim()!=='تأكيد')return toast('اكتب كلمة «تأكيد» للمتابعة');
+  if(!confirm('تغيير الرصيد من '+n0(S.cum)+' إلى '+n0(v)+'؟'))return;
+  S.cum=v;save();render();closeSet();toast('تم تعديل الرصيد');
+}
+function exp(){
+  const blob=new Blob([JSON.stringify({app:'deficit-tracker',v:1,exported:new Date().toISOString(),cum:S.cum,w0:S.w0,log:S.log},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deficit-backup-'+new Date().toLocaleDateString('en-CA')+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);toast('تم تصدير النسخة');
+}
+function imp(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const j=JSON.parse(r.result);
+      if(typeof j.cum!=='number'||!Array.isArray(j.log))throw 0;
+      if(!confirm('سيتم استبدال الرصيد والسجل الحاليين بالنسخة المرفوعة (الرصيد '+n0(j.cum)+'، '+j.log.length+' يوم). متابعة؟'))return;
+      S.cum=j.cum;S.log=j.log;if(typeof j.w0==='number')S.w0=j.w0;
+      save();render();closeSet();toast('تم الاسترجاع ✅');
+    }catch(e){toast('ملف غير صالح')}
+    inp.value='';
+  };
+  r.readAsText(f);
+}
+
+async function boot(){
+  render();
+  try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(e){}
+  const d=await idb.get();
+  if(d&&typeof d.cum==='number'&&(d.updated||0)>(S.updated||0)){
+    S=Object.assign(def(),d,{dr:Object.assign(def().dr,d.dr||{})});
+    try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+    render();toast('تم استرجاع بياناتك من النسخة الداخلية ✅');
+  }else if(S.updated)idb.put(S);
+}
+let dp=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('inst').style.display='block'});
+addEventListener('appinstalled',()=>{dp=null;$('inst').style.display='none';toast('تم تثبيت التطبيق ✅')});
+function doInst(){if(!dp)return;dp.prompt();dp.userChoice.finally(()=>{dp=null;$('inst').style.display='none'})}
+if('serviceWorker' in navigator){
+  const reg=()=>navigator.serviceWorker.register('./service-worker.js',{scope:'./'}).catch(e=>console.warn('SW',e));
+  document.readyState==='complete'?reg():addEventListener('load',reg);
+}
+async function pwaCheck(){
+  const o=[],ok=(c,t)=>o.push((c?'✅ ':'❌ ')+t),box=$('pwa');
+  box.style.display='block';box.textContent='جارٍ الفحص...';
+  ok(location.protocol==='https:'||location.hostname==='localhost','HTTPS: '+location.protocol);
+  try{
+    const l=document.querySelector('link[rel=manifest]');ok(!!l,'رابط manifest في الصفحة');
+    const r=await fetch(l.href,{cache:'no-store'});ok(r.ok,'ملف manifest.json ('+r.status+')');
+    const m=await r.json();
+    ok(m.name&&m.start_url&&m.display==='standalone','name / start_url / display=standalone');
+    for(const i of (m.icons||[])){const x=await fetch(new URL(i.src,l.href),{cache:'no-store'});ok(x.ok,'أيقونة '+i.sizes+' '+i.purpose+' ('+x.status+')')}
+  }catch(e){ok(false,'manifest: '+e.message)}
+  try{
+    const g=await navigator.serviceWorker.getRegistration();
+    ok(!!g,'تسجيل Service Worker');
+    ok(!!(g&&g.active&&g.active.state==='activated'),'Service Worker مفعّل');
+    ok(!!navigator.serviceWorker.controller,'الصفحة تحت سيطرة الـ SW (لو ❌ أعد تحميل الصفحة مرة)');
+  }catch(e){ok(false,'Service Worker: '+e.message)}
+  ok(true,matchMedia('(display-mode: standalone)').matches?'يعمل الآن كتطبيق مثبّت':'يعمل داخل المتصفح (غير مثبّت)');
+  o.push(dp?'📲 Chrome جاهز للتثبيت: زرار التثبيت ظاهر بالأعلى.':'ℹ️ لم يصل طلب التثبيت من Chrome بعد؛ جرّب قائمة ⋮ ثم «تثبيت التطبيق».');
+  box.textContent=o.join('\n');
+}
+boot();
+</script>
+</body>
+</html>
